@@ -13,7 +13,7 @@
 <?import javafx.scene.text.Font?>
 <?import javafx.scene.text.Text?>
 
-<GridPane fx:controller="home.Controller" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1">
+<GridPane fx:id="gridPane" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="home.Controller">
     <columnConstraints>
         <ColumnConstraints hgrow="SOMETIMES" maxWidth="230.0" minWidth="10.0" prefWidth="230.0" />
         <ColumnConstraints hgrow="SOMETIMES" prefWidth="520.0" />
@@ -40,7 +40,7 @@
                         <Insets bottom="3.0" left="5.0" right="5.0" />
                     </VBox.margin>
                 </Text>
-                <TextField fx:id="filepath" editable="false">
+                <TextField fx:id="filepath" editable="true">
                     <VBox.margin>
                         <Insets bottom="3.0" left="5.0" right="5.0" />
                     </VBox.margin>
@@ -88,7 +88,15 @@
                         <Insets bottom="3.0" left="5.0" right="5.0" />
                     </VBox.margin>
                 </Button>
-                <Button fx:id="save" layoutX="15.0" layoutY="110.0" mnemonicParsing="false" prefHeight="27.0" prefWidth="220.0" text="Save Summary" textAlignment="CENTER">
+            <TextField fx:id="output" editable="true" layoutX="15.0" layoutY="86.0" promptText="Output File">
+               <font>
+                  <Font name="Arial" size="14.0" />
+               </font>
+               <VBox.margin>
+                  <Insets bottom="3.0" left="5.0" right="5.0" />
+               </VBox.margin>
+            </TextField>
+                <Button fx:id="save" layoutX="15.0" layoutY="110.0" mnemonicParsing="false" prefHeight="27.0" prefWidth="220.0" text="Save Summary">
                     <font>
                         <Font name="Arial" size="14.0" />
                     </font>
@@ -96,24 +104,25 @@
                         <Insets bottom="3.0" left="5.0" right="5.0" />
                     </VBox.margin>
                 </Button>
+            <TextArea fx:id="infoArea" editable="false" prefWidth="200.0" wrapText="true" VBox.vgrow="ALWAYS">
+               <VBox.margin>
+                  <Insets bottom="3.0" />
+               </VBox.margin></TextArea>
             </children>
         </VBox>
         <VBox prefHeight="500.0" prefWidth="520.0" GridPane.columnIndex="1">
             <children>
-                <TextArea fx:id="summary" editable="false" focusTraversable="false" prefHeight="120.0" prefWidth="520.0" style="-fx-background-color: #fff;">
-                    <padding>
-                        <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
-                    </padding>
-                    <font>
-                        <Font name="Arial" size="14.0" />
-                    </font></TextArea>
-                <ScatterChart fx:id="chart" title="Network Overview">
+                <TextArea fx:id="summary" editable="false" prefHeight="120.0" prefWidth="520.0" />
+                <ScatterChart fx:id="chart" title="Network Overview" VBox.vgrow="ALWAYS">
                     <xAxis>
                         <NumberAxis side="BOTTOM" upperBound="1.0" />
                     </xAxis>
                     <yAxis>
                         <NumberAxis side="LEFT" upperBound="1.0" />
                     </yAxis>
+               <VBox.margin>
+                  <Insets bottom="3.0" top="3.0" />
+               </VBox.margin>
                 </ScatterChart>
             </children>
         </VBox>

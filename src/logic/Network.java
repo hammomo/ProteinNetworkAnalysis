@@ -11,21 +11,13 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 public class Network {
-    Set<Node> nodes;
-    Set<Edge> edges;
-    Map<Node, Integer> fullDistribution = new HashMap<Node, Integer>();
+    private Set<Node> nodes;
+    private Set<Edge> edges;
+    private Map<Node, Integer> fullDistribution = new HashMap<Node, Integer>();
 
     public Network() {
         this.nodes = new HashSet<Node>();
         this.edges = new HashSet<Edge>();
-    }
-
-    public static void main(String[] args) {
-        Network test = new Network();
-        test.createNetworkFromFile("PPInetwork.txt");
-        Set<Node> nodes = test.findHubs();
-        nodes.forEach(node -> System.out.println(node.getName()));
-        test.saveDegreeDistribution("test.txt");
     }
 
     /**
@@ -43,7 +35,7 @@ public class Network {
      * Import thw whole network from a file
      * @param filename
      */
-    public void createNetworkFromFile(String filename) {
+    public void createNetworkFromFile(String filename) throws IOException {
         Path file = Paths.get(filename);
         try(BufferedReader reader = Files.newBufferedReader(file)) {
             String line;
@@ -58,32 +50,26 @@ public class Network {
             }
             reader.close();
         } catch (IOException e) {
-            System.err.println(e.getMessage());
+            throw e;
         }
     }
 
     /**
      * Import protein interaction manually
      */
-    public void addInteraction() {
-        try (BufferedReader reader = new BufferedReader(new InputStreamReader(System.in))) {
-            System.out.println("Please input one node:");
-            Node node1 = new Node(reader.readLine());
-            System.out.println("Please input another node:");
-            Node node2 = new Node(reader.readLine());
-            Edge edge = new Edge(node1, node2);
-            if (edges.contains(edge)) {
-                System.out.println("Interaction already exists! " + node1.getName() + " " + node2.getName());
-                return;
-            }
-            addDegreesToMap(edge, new Node[]{node1, node2});
-            edges.add(edge);
-            nodes.add(node1);
-            nodes.add(node2);
-            reader.close();
-        } catch (IOException e) {
-            System.err.println(e.getMessage());
+    public String addInteraction(String name1, String name2) throws NullPointerException {
+        if (name1 == null || name2 == null || name1.equals("") || name2.equals("")) throw new NullPointerException();
+        Node node1 = new Node(name1);
+        Node node2 = new Node(name2);
+        Edge edge = new Edge(node1, node2);
+        if (edges.contains(edge)) {
+            return String.format("Interaction between %s and %s already exists!\n", node1.getName(), node2.getName());
         }
+        addDegreesToMap(edge, new Node[]{node1, node2});
+        edges.add(edge);
+        nodes.add(node1);
+        nodes.add(node2);
+        return String.format("Interaction between %s and %s added successfully!\n", node1.getName(), node2.getName());
     }
 
     /**
@@ -162,5 +148,19 @@ public class Network {
                                                             .stream().collect(Collectors.toList());
         Collections.sort(allDegrees, Collections.reverseOrder());
         return allDegrees;
+    }
+
+    public int countOfNodes() {
+        return nodes.size();
+    }
+
+    public int counOfEdges() {
+        return edges.size();
+    }
+
+    public String generateHubsString() {
+        StringJoiner sj = new StringJoiner(",");
+        findHubs().forEach(node -> sj.add(node.getName()));
+        return sj.toString();
     }
 }

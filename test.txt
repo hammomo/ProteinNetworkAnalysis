@@ -1,8 +1,0 @@
-degree	number of nodes
-8	1
-6	2
-5	5
-4	13
-3	27
-2	58
-1	190
