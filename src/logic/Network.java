@@ -1,5 +1,7 @@
 package logic;
 
+import javafx.util.Pair;
+
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -127,10 +129,8 @@ public class Network {
      * @param filename
      */
     public void saveDegreeDistribution(String filename) {
-        Map<Integer, Integer> degreeOfNodes = new HashMap<Integer, Integer>();
         List<Integer> allDegrees = degreeReverseSorter();
-        allDegrees.forEach(degree -> degreeOfNodes.put(degree, 0));
-        fullDistribution.forEach((key, val) -> degreeOfNodes.put(val, degreeOfNodes.get(val) + 1));
+        Map<Integer, Integer> degreeOfNodes = getDegreeDistribution();
         Path file = Paths.get(filename);
         try (BufferedWriter writer = Files.newBufferedWriter(file)) {
             writer.write("degree\tnumber of nodes\n");
@@ -141,6 +141,14 @@ public class Network {
         } catch (IOException e) {
             System.err.println(e.getMessage());
         }
+    }
+
+    public Map<Integer, Integer> getDegreeDistribution() {
+        Map<Integer, Integer> degreeOfNodes = new HashMap<Integer, Integer>();
+        List<Integer> allDegrees = degreeReverseSorter();
+        allDegrees.forEach(degree -> degreeOfNodes.put(degree, 0));
+        fullDistribution.forEach((key, val) -> degreeOfNodes.put(val, degreeOfNodes.get(val) + 1));
+        return degreeOfNodes;
     }
 
     public List<Integer> degreeReverseSorter() {
@@ -154,13 +162,14 @@ public class Network {
         return nodes.size();
     }
 
-    public int counOfEdges() {
+    public int countOfEdges() {
         return edges.size();
     }
 
-    public String generateHubsString() {
+    public Pair<Integer, String> generateHubsString() {
+        int maxDegree = degreeReverseSorter().get(0);
         StringJoiner sj = new StringJoiner(",");
         findHubs().forEach(node -> sj.add(node.getName()));
-        return sj.toString();
+        return new Pair<>(maxDegree, sj.toString());
     }
 }

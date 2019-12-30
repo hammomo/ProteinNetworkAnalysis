@@ -1,9 +1,10 @@
 package home;
 
 import javafx.beans.value.ChangeListener;
-import javafx.beans.value.ObservableValue;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
+import javafx.scene.chart.LineChart;
+import javafx.scene.chart.XYChart;
 import javafx.scene.control.Button;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
@@ -12,16 +13,22 @@ import javafx.stage.Stage;
 
 import java.io.IOException;
 import java.net.URL;
+import java.util.Map;
 import java.util.ResourceBundle;
+
+import javafx.util.Pair;
 import logic.Network;
+import logic.Node;
 
 public class Controller implements Initializable {
     @FXML
     private TextArea summary, infoArea;
     @FXML
-    private Button upload, add, save;
+    private Button upload, add, save, nodeSearch;
     @FXML
-    private TextField filepath, node1, node2, output;
+    private TextField filepath, node1, node2, output, nodeName;
+    @FXML
+    private LineChart lineChart;
 
     private Stage stage;
     private Network network;
@@ -29,21 +36,24 @@ public class Controller implements Initializable {
     private int numOfNodes = 0;
     private int numOfInteractions = 0;
     private String hubStr = "";
+    private int maxDegree = 0;
+    private int numOfEdges = 0;
 
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
         filepath.setText("PPInetwork.txt");
         setSummary();
         infoArea.setText("Information Area:\n");
-        infoArea.textProperty().addListener(new ChangeListener<Object>() {
-            @Override
-            public void changed(ObservableValue<?> observable, Object oldValue, Object newValue) {
-                infoArea.setScrollTop(Double.MAX_VALUE); //this will scroll to the bottom
-            }
+        infoArea.textProperty().addListener((ChangeListener<Object>) (observable, oldValue, newValue) -> {
+            infoArea.setScrollTop(Double.MAX_VALUE); //this will scroll to the bottom
         });
         upload.setOnAction(actionEvent -> {
             // openFileDialog(); // Cannot work on Mac OS 10.15.1 due to JavaFX internal bug
             openFile();
+        });
+        nodeSearch.setOnAction(actionEvent -> {
+            String msg = searchDegreeForNode();
+            infoArea.appendText(msg);
         });
         add.setOnAction(actionEvent -> {
             String msg = addInteraction();
@@ -60,16 +70,23 @@ public class Controller implements Initializable {
     }
 
     private void setSummary() {
-        summary.setText("Number of Nodes: " + numOfNodes
-                + "\nNumber of Interactions: " + numOfInteractions
-                + "\nAverage Degree: " + averageDegree
-                + "\nHubs: " + hubStr);
+        if (numOfEdges == 0 && nodeName.getText().equals("")) {
+            summary.setText(String.format("Number of Nodes: %d\nNumber of Interactions: %d\nAverage Degree: %.8f\n" +
+                            "Hub(s): %s\nMax Degree: %d", numOfNodes, numOfInteractions
+                    , averageDegree, hubStr, maxDegree));
+        } else {
+            summary.setText(String.format("Number of Nodes: %d\nNumber of Interactions: %d\nAverage Degree: %.8f\n" +
+                            "Hub(s): %s\nMax Degree: %d\nFind %d edge(s) for the Node %s", numOfNodes, numOfInteractions
+                    , averageDegree, hubStr, maxDegree, numOfEdges, nodeName.getText()));
+        }
     }
 
     private void updateSummary() {
-        hubStr = network.generateHubsString();
+        Pair<Integer, String> p  = network.generateHubsString();
+        hubStr = p.getValue();
+        maxDegree = p.getKey();
         numOfNodes = network.countOfNodes();
-        numOfInteractions = network.counOfEdges();
+        numOfInteractions = network.countOfEdges();
         averageDegree = network.averageDegree();
     }
 
@@ -79,11 +96,27 @@ public class Controller implements Initializable {
             network.createNetworkFromFile(filepath.getText());
             updateSummary();
             setSummary();
+            updateLineChart();
             infoArea.appendText("File " + filepath.getText() + " uploaded successfully!\n");
         } catch (IOException e) {
             infoArea.appendText("Cannot find file: " + e.getMessage()
                     + "\nPlease input valid filename!\n");
         }
+    }
+
+    private String searchDegreeForNode() {
+        try {
+            checkNetworkExistence();
+        } catch (NullPointerException e) {
+            return e.getMessage();
+        }
+        String name = nodeName.getText();
+        if (name == null || name.equals("")) return "Please enter a node name!\n";
+        int degree = network.degreeOfNode(new Node(name));
+        if (degree == 0) return "Cannot find edges for the Node: " + name + "\n";
+        numOfEdges = degree;
+        setSummary();
+        return String.format("Find %d edge(s) for the Node %s\nSummary Updated!\n", numOfEdges, name);
     }
 
     private String addInteraction() {
@@ -96,6 +129,7 @@ public class Controller implements Initializable {
             String msg = network.addInteraction(node1.getText(), node2.getText());
             updateSummary();
             setSummary();
+            updateLineChart();
             return msg;
         } catch (NullPointerException e) {
             return "Cannot add Null node! Please input both nodes!\n";
@@ -116,6 +150,26 @@ public class Controller implements Initializable {
 
     private void checkNetworkExistence() throws NullPointerException {
         if (network == null) throw new NullPointerException("Network has not been initialised!\n");
+    }
+
+    private void updateLineChart() {
+        double xUpper = 0.0, yUpper = 0.0;
+        Map<Integer, Integer> dist = network.getDegreeDistribution();
+        for (int i: dist.keySet()) {
+            if (i > xUpper) xUpper = i;
+            if (dist.get(i) > yUpper) yUpper = dist.get(i);
+        }
+        if (lineChart.getData().size() > 0) {
+            lineChart.getData().remove(0);
+        }
+        lineChart.setLayoutX(xUpper);
+        lineChart.setLayoutY(yUpper);
+        XYChart.Series<Number, Number> series = new XYChart.Series<>();
+        dist.forEach((k,v) -> {
+            series.getData().add(new XYChart.Data(k, v));
+        });
+
+        lineChart.getData().add(series);
     }
 
     /**
