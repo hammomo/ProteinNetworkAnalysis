@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.chart.LineChart?>
+<?import javafx.scene.chart.NumberAxis?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TextArea?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.ColumnConstraints?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.RowConstraints?>
+<?import javafx.scene.layout.VBox?>
+
+<GridPane fx:id="gridPane" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="home.HomeController">
+    <columnConstraints>
+        <ColumnConstraints hgrow="SOMETIMES" maxWidth="230.0" minWidth="10.0" prefWidth="230.0" />
+        <ColumnConstraints hgrow="SOMETIMES" prefWidth="520.0" />
+    </columnConstraints>
+    <rowConstraints>
+        <RowConstraints minHeight="400" prefHeight="500" vgrow="SOMETIMES" />
+    </rowConstraints>
+    <children>
+        <VBox styleClass="dashboard" GridPane.columnIndex="0">
+            <children>
+                <Label styleClass="title" text="Network Analysis" VBox.vgrow="ALWAYS" />
+                <Label styleClass="dashboard-label" text="File Path:" />
+                <TextField fx:id="filepath" editable="true">
+                    <VBox.margin>
+                        <Insets bottom="3.0" left="5.0" right="5.0" />
+                    </VBox.margin>
+                </TextField>
+                <Button fx:id="upload" mnemonicParsing="false" text="Upload">
+                    <VBox.margin>
+                        <Insets left="5.0" right="5.0" />
+                    </VBox.margin>
+                </Button>
+                <Label styleClass="dashboard-label" text="Number of Edge(s):" />
+                <TextField fx:id="nodeName" editable="true" promptText="Node Name">
+                    <VBox.margin>
+                        <Insets bottom="3.0" left="5.0" right="5.0" />
+                    </VBox.margin>
+                </TextField>
+                <Button fx:id="nodeSearch" mnemonicParsing="false" text="Search">
+                    <VBox.margin>
+                        <Insets left="5.0" right="5.0" />
+                    </VBox.margin>
+                </Button>
+                <Label styleClass="dashboard-label" text="New Interaction:" />
+                <TextField fx:id="node1" promptText="Node 1">
+                    <VBox.margin>
+                        <Insets bottom="3.0" left="5.0" right="5.0" />
+                    </VBox.margin>
+                </TextField>
+                <TextField fx:id="node2" promptText="Node 2">
+                    <VBox.margin>
+                        <Insets bottom="3.0" left="5.0" right="5.0" />
+                    </VBox.margin>
+                </TextField>
+                <Button fx:id="add" mnemonicParsing="false" text="Add">
+                    <VBox.margin>
+                        <Insets left="5.0" right="5.0" />
+                    </VBox.margin>
+                </Button>
+                <Label styleClass="dashboard-label" text="Output Filename:" />
+                <TextField fx:id="output" editable="true" layoutX="15.0" layoutY="252.0" promptText="Output File">
+                    <VBox.margin>
+                        <Insets bottom="3.0" left="5.0" right="5.0" />
+                    </VBox.margin>
+                </TextField>
+                <Button fx:id="save" mnemonicParsing="false" text="Save Summary">
+                    <VBox.margin>
+                        <Insets left="5.0" right="5.0" />
+                    </VBox.margin>
+                </Button>
+                <TextArea fx:id="infoArea" editable="false" VBox.vgrow="ALWAYS" />
+            </children>
+        </VBox>
+        <VBox styleClass="main" GridPane.columnIndex="1">
+            <children>
+                <TextArea fx:id="summary" editable="false" styleClass="main-text-area" />
+                <LineChart fx:id="lineChart" legendVisible="false" title="Degree Distribution of the Network" VBox.vgrow="ALWAYS">
+                    <xAxis>
+                        <NumberAxis label="Number of Nodes" side="BOTTOM" upperBound="10.0" />
+                    </xAxis>
+                    <yAxis>
+                        <NumberAxis label="Degree" side="LEFT" upperBound="200.0" />
+                    </yAxis>
+                </LineChart>
+            </children>
+        </VBox>
+    </children>
+</GridPane>
