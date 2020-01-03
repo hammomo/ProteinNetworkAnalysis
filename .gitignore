@@ -8,6 +8,7 @@ bin/
 *.iws
 mods/
 jre/
+.idea/
 
 # Mac
 .DS_Store
