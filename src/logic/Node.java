@@ -1,5 +1,12 @@
 package logic;
 
+/**
+ * 
+ * @author Hanyi.Mo
+ *
+ * Node.java
+ */
+
 public class Node {
     private String name;
 

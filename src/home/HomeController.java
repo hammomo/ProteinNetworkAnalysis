@@ -20,7 +20,16 @@ import java.net.URL;
 import java.util.Map;
 import java.util.ResourceBundle;
 
+/**
+ * 
+ * @author Hanyi.Mo
+ *
+ * HomeController.java
+ */
+
 public class HomeController implements Initializable {
+	
+	// the following fields are binded with the view
     @FXML
     private TextArea summary, infoArea;
     @FXML
@@ -30,6 +39,7 @@ public class HomeController implements Initializable {
     @FXML
     private LineChart<Number, Number> lineChart;
 
+    // the following fields are only used in this controller
     private Stage stage;
     private Network network;
     private double averageDegree = 0.0;
@@ -40,6 +50,9 @@ public class HomeController implements Initializable {
     private int numOfEdges = 0;
     private String theNode = "";
 
+    /**
+     * initial fields and events
+     */
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
         filepath.setText("PPInetwork.txt");
@@ -49,7 +62,7 @@ public class HomeController implements Initializable {
             infoArea.setScrollTop(Double.MAX_VALUE); //this will scroll to the bottom
         });
         upload.setOnAction(actionEvent -> {
-            // openFileDialog(); // Cannot work on Mac OS 10.15.1 due to JavaFX internal bug
+            // openFileDialog(); // Cannot work on Mac OS 10.15.1
             openFile();
         });
         nodeSearch.setOnAction(actionEvent -> {
@@ -71,6 +84,9 @@ public class HomeController implements Initializable {
         this.stage = stage;
     }
 
+    /**
+     * To set the summary string
+     */
     private void setSummary() {
         if (numOfEdges == 0 && theNode.equals("")) {
             summary.setText(String.format("Number of Nodes: %d\nNumber of Interactions: %d\nAverage Degree: %.8f\n" +
@@ -83,6 +99,9 @@ public class HomeController implements Initializable {
         }
     }
 
+    /**
+     * To update variables in the summary string
+     */
     private void updateSummary() {
         Pair<Integer, String> p  = network.generateHubsString();
         hubStr = p.getValue();
@@ -92,6 +111,9 @@ public class HomeController implements Initializable {
         averageDegree = network.averageDegree();
     }
 
+    /**
+     * To create a network from the input filename
+     */
     private void openFile() {
         network = new Network();
         try {
@@ -106,6 +128,10 @@ public class HomeController implements Initializable {
         }
     }
 
+    /**
+     * To search the degree of one specific node
+     * @return
+     */
     private String searchDegreeForNode() {
         try {
             checkNetworkExistence();
@@ -120,6 +146,10 @@ public class HomeController implements Initializable {
         return String.format("Find %d edge(s) for the Node %s\nSummary Updated!\n", numOfEdges, theNode);
     }
 
+    /**
+     * To add an edge to the current network
+     * @return
+     */
     private String addInteraction() {
         try {
             checkNetworkExistence();
@@ -139,6 +169,10 @@ public class HomeController implements Initializable {
         }
     }
 
+    /**
+     * To save the degree distribution to a destination file
+     * @return
+     */
     private String saveDistribution() {
         try {
             checkNetworkExistence();
@@ -151,10 +185,17 @@ public class HomeController implements Initializable {
         return String.format("Network distribution has been saved to file: %s\n", filename);
     }
 
+    /**
+     * To check if the network exists, otherwise throw an exception
+     * @throws NullPointerException
+     */
     private void checkNetworkExistence() throws NullPointerException {
         if (network == null) throw new NullPointerException("Network has not been initialised!\n");
     }
 
+    /**
+     * To generate data in the line chart
+     */
     private void updateLineChart() {
         double xUpper = 0.0, yUpper = 0.0;
         Map<Integer, Integer> dist = network.getDegreeDistribution();
@@ -176,7 +217,9 @@ public class HomeController implements Initializable {
     }
 
     /**
-     * Useless on Mac OS 10.15.1
+     * The method intended to allow user to locate an input file
+     * from the whole file system via open a pop-up dialog/window.
+     * However, due to the security setting on Mac, it cannot work properly.
      */
     @SuppressWarnings("unused")
 	private void openFileDialog() {
