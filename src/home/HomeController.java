@@ -116,9 +116,8 @@ public class HomeController implements Initializable {
      * To update variables in the summary string
      */
     private void updateSummary() {
-        Pair<Integer, String> p = network.generateHubsString();
-        hubStr = p.getValue();
-        maxDegree = p.getKey();
+        hubStr = network.findHubs();
+        maxDegree = network.getMaxDegree();
         numOfNodes = network.countOfNodes();
         numOfInteractions = network.countOfEdges();
         averageDegree = network.averageDegree();

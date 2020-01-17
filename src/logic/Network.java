@@ -1,7 +1,5 @@
 package logic;
 
-import javafx.util.Pair;
-
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -117,21 +115,30 @@ public class Network {
         }
         return (double) sum / nodeSize;
     }
+    
+    /**
+     * To get max degree
+     * 
+     * @return
+     */
+    public int getMaxDegree() {
+    	return degreeReverseSorter().get(0);
+    }
 
     /**
      * To find the hubs which contain the highest degree
+     * return a formatted string to be better handled by UI
      *
      * @return
      */
-    public Set<Node> findHubs() {
-        List<Integer> list = degreeReverseSorter();
-        int maxDegree = list.get(0);
-        Set<Node> hubs = new HashSet<Node>();
+    public String findHubs() {
+        int maxDegree = getMaxDegree();
+        StringJoiner sj = new StringJoiner(",");
         fullDistribution.forEach((key, val) -> {
             if (val == maxDegree)
-                hubs.add(key);
+                sj.add(key.getName());
         });
-        return hubs;
+        return sj.toString();
     }
 
     /**
@@ -197,19 +204,7 @@ public class Network {
     public int countOfEdges() {
         return edges.size();
     }
-
-    /**
-     * To get the pair of the maximum degree and the hubs as string format
-     *
-     * @return
-     */
-    public Pair<Integer, String> generateHubsString() {
-        int maxDegree = degreeReverseSorter().get(0);
-        StringJoiner sj = new StringJoiner(",");
-        findHubs().forEach(node -> sj.add(node.getName()));
-        return new Pair<>(maxDegree, sj.toString());
-    }
-
+    
     /**
      * Expose all edges (actually, the names of nodes connected by edges)
      * to the front-end to draw the visualised network
