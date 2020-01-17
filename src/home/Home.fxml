@@ -1,14 +1,21 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <?import javafx.geometry.Insets?>
+<?import javafx.scene.canvas.Canvas?>
 <?import javafx.scene.chart.LineChart?>
 <?import javafx.scene.chart.NumberAxis?>
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.control.Tab?>
+<?import javafx.scene.control.TabPane?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
 <?import javafx.scene.control.TextArea?>
 <?import javafx.scene.control.TextField?>
 <?import javafx.scene.layout.ColumnConstraints?>
 <?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.RowConstraints?>
 <?import javafx.scene.layout.VBox?>
 
@@ -79,14 +86,33 @@
         <VBox styleClass="main" GridPane.columnIndex="1">
             <children>
                 <TextArea fx:id="summary" editable="false" styleClass="main-text-area" />
-                <LineChart fx:id="lineChart" legendVisible="false" title="Degree Distribution of the Network" VBox.vgrow="ALWAYS">
-                    <xAxis>
-                        <NumberAxis label="Number of Nodes" side="BOTTOM" upperBound="10.0" />
-                    </xAxis>
-                    <yAxis>
-                        <NumberAxis label="Degree" side="LEFT" upperBound="200.0" />
-                    </yAxis>
-                </LineChart>
+                <TabPane tabClosingPolicy="UNAVAILABLE" VBox.vgrow="ALWAYS">
+                    <tabs>
+                        <Tab text="Degree Distribution">
+                            <HBox>
+                                <LineChart fx:id="lineChart" legendVisible="false" title="Degree Distribution of the Network" HBox.hgrow="ALWAYS">
+                                    <xAxis>
+                                        <NumberAxis label="Number of Nodes" side="BOTTOM" upperBound="10.0" />
+                                    </xAxis>
+                                    <yAxis>
+                                        <NumberAxis label="Degree" side="LEFT" upperBound="200.0" />
+                                    </yAxis>
+                                </LineChart>
+                                <TableView fx:id="table" prefWidth="180">
+                                    <columns>
+                                        <TableColumn fx:id="tDegree" prefWidth="75.0" text="Degree" />
+                                        <TableColumn fx:id="tNum" prefWidth="100.0" text="No. of Nodes" />
+                                    </columns>
+                                </TableView>
+                            </HBox>
+                        </Tab>
+                        <Tab fx:id="visualTab" text="Visualised Network">
+                            <ScrollPane>
+                                <Canvas fx:id="canvas" height="800.0" width="1200.0" />
+                            </ScrollPane>
+                        </Tab>
+                    </tabs>
+                </TabPane>
             </children>
         </VBox>
     </children>

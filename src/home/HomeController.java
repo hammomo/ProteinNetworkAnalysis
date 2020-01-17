@@ -1,35 +1,38 @@
 package home;
 
+import home.helper.CanvasHelper;
+import home.helper.TableHelper;
 import javafx.beans.value.ChangeListener;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
+import javafx.scene.canvas.Canvas;
+import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.chart.LineChart;
 import javafx.scene.chart.XYChart;
 import javafx.scene.chart.XYChart.Data;
-import javafx.scene.control.Button;
-import javafx.scene.control.TextArea;
-import javafx.scene.control.TextField;
+import javafx.scene.control.*;
+import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.scene.paint.Color;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import javafx.util.Pair;
 import logic.Network;
-import logic.Node;
 
 import java.io.IOException;
 import java.net.URL;
-import java.util.Map;
-import java.util.ResourceBundle;
+import java.util.*;
 
 /**
- * 
  * @author Hanyi.Mo
- *
+ * 
  * HomeController.java
  */
 
 public class HomeController implements Initializable {
-	
-	// the following fields are binded with the view
+
+    // the following fields are bound with the view
     @FXML
     private TextArea summary, infoArea;
     @FXML
@@ -38,6 +41,14 @@ public class HomeController implements Initializable {
     private TextField filepath, node1, node2, output, nodeName;
     @FXML
     private LineChart<Number, Number> lineChart;
+    @FXML
+    private TableView<TableHelper> table;
+    @FXML
+    private TableColumn<TableHelper, Integer> tDegree, tNum;
+    @FXML
+    private Canvas canvas;
+    @FXML
+    private GraphicsContext gc;
 
     // the following fields are only used in this controller
     private Stage stage;
@@ -55,6 +66,8 @@ public class HomeController implements Initializable {
      */
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
+        gc = canvas.getGraphicsContext2D();
+
         filepath.setText("PPInetwork.txt");
         setSummary();
         infoArea.setText("Information Area:\n");
@@ -62,7 +75,7 @@ public class HomeController implements Initializable {
             infoArea.setScrollTop(Double.MAX_VALUE); //this will scroll to the bottom
         });
         upload.setOnAction(actionEvent -> {
-            // openFileDialog(); // Cannot work on Mac OS 10.15.1
+            // openFileDialog(); // Cannot work on macOS 10.15.1
             openFile();
         });
         nodeSearch.setOnAction(actionEvent -> {
@@ -88,7 +101,7 @@ public class HomeController implements Initializable {
      * To set the summary string
      */
     private void setSummary() {
-        if (numOfEdges == 0 && theNode.equals("")) {
+        if (numOfEdges == 0 || theNode.equals("")) {
             summary.setText(String.format("Number of Nodes: %d\nNumber of Interactions: %d\nAverage Degree: %.8f\n" +
                             "Hub(s): %s\nMax Degree: %d", numOfNodes, numOfInteractions
                     , averageDegree, hubStr, maxDegree));
@@ -103,7 +116,7 @@ public class HomeController implements Initializable {
      * To update variables in the summary string
      */
     private void updateSummary() {
-        Pair<Integer, String> p  = network.generateHubsString();
+        Pair<Integer, String> p = network.generateHubsString();
         hubStr = p.getValue();
         maxDegree = p.getKey();
         numOfNodes = network.countOfNodes();
@@ -121,6 +134,8 @@ public class HomeController implements Initializable {
             updateSummary();
             setSummary();
             updateLineChart();
+            setTableView();
+            drawCanvas();
             infoArea.appendText("File " + filepath.getText() + " uploaded successfully!\n");
         } catch (IOException e) {
             infoArea.appendText("Cannot find file: " + e.getMessage()
@@ -130,6 +145,7 @@ public class HomeController implements Initializable {
 
     /**
      * To search the degree of one specific node
+     *
      * @return
      */
     private String searchDegreeForNode() {
@@ -138,16 +154,20 @@ public class HomeController implements Initializable {
         } catch (NullPointerException e) {
             return e.getMessage();
         }
-        theNode = nodeName.getText().equals("")? theNode : nodeName.getText();
+        theNode = nodeName.getText();
         if (theNode == null || theNode.equals("")) return "Please enter a node name!\n";
-        int degree = network.degreeOfNode(new Node(theNode));
-        if (degree == 0) return "Cannot find edges for the Node: " + theNode + "\n";
+        int degree = network.degreeOfNode(theNode);
+        if (degree == 0) {
+            numOfEdges = 0;
+            return "Cannot find edges for the Node: " + theNode + "\n";
+        }
         numOfEdges = degree;
         return String.format("Find %d edge(s) for the Node %s\nSummary Updated!\n", numOfEdges, theNode);
     }
 
     /**
      * To add an edge to the current network
+     *
      * @return
      */
     private String addInteraction() {
@@ -163,6 +183,8 @@ public class HomeController implements Initializable {
             updateSummary();
             setSummary();
             updateLineChart();
+            setTableView();
+            drawCanvas();
             return msg;
         } catch (NullPointerException e) {
             return "Cannot add Null node! Please input both nodes!\n";
@@ -171,6 +193,7 @@ public class HomeController implements Initializable {
 
     /**
      * To save the degree distribution to a destination file
+     *
      * @return
      */
     private String saveDistribution() {
@@ -187,6 +210,7 @@ public class HomeController implements Initializable {
 
     /**
      * To check if the network exists, otherwise throw an exception
+     *
      * @throws NullPointerException
      */
     private void checkNetworkExistence() throws NullPointerException {
@@ -199,7 +223,7 @@ public class HomeController implements Initializable {
     private void updateLineChart() {
         double xUpper = 0.0, yUpper = 0.0;
         Map<Integer, Integer> dist = network.getDegreeDistribution();
-        for (int i: dist.keySet()) {
+        for (int i : dist.keySet()) {
             if (i > xUpper) xUpper = i;
             if (dist.get(i) > yUpper) yUpper = dist.get(i);
         }
@@ -209,20 +233,54 @@ public class HomeController implements Initializable {
         lineChart.setLayoutX(xUpper);
         lineChart.setLayoutY(yUpper);
         XYChart.Series<Number, Number> series = new XYChart.Series<>();
-        dist.forEach((k,v) -> {
-            series.getData().add(new Data<Number, Number>(k, v));
+        dist.forEach((k, v) -> {
+            series.getData().add(new Data<>(k, v));
         });
 
         lineChart.getData().add(series);
     }
 
+    private void setTableView() {
+        List<TableHelper> list = new ArrayList<>();
+        network.getDegreeDistribution().forEach((k, v) -> {
+            list.add(new TableHelper(k, v));
+        });
+        final ObservableList<TableHelper> data =
+                FXCollections.observableArrayList(list);
+        tDegree.setCellValueFactory(new PropertyValueFactory<>("degree"));
+        tNum.setCellValueFactory(new PropertyValueFactory<>("num"));
+        table.setItems(data);
+    }
+
+    private void drawCanvas() {
+        gc.clearRect(0, 0, canvas.getWidth(), canvas.getHeight());
+        List<String[]> names = network.getAllEdges();
+        Map<String, CanvasHelper> nodeCoordinates = new HashMap<>();
+        names.forEach(arr -> {
+            if (!nodeCoordinates.containsKey(arr[0])) {
+                nodeCoordinates.put(arr[0], new CanvasHelper(arr[0]));
+            }
+            if (!nodeCoordinates.containsKey(arr[1])) {
+                nodeCoordinates.put(arr[1], new CanvasHelper(arr[1]));
+            }
+            CanvasHelper c1 = nodeCoordinates.get(arr[0]);
+            CanvasHelper c2 = nodeCoordinates.get(arr[1]);
+            gc.strokeLine(c1.xAxis + 7.5, c1.yAxis + 7.5, c2.xAxis + 7.5, c2.yAxis + 7.5);
+        });
+        gc.setFill(Color.BLUE);
+        nodeCoordinates.values().forEach(c -> {
+            gc.fillOval(c.xAxis, c.yAxis, 15, 15);
+            gc.strokeText(c.name, c.xAxis, c.yAxis);
+        });
+    }
+
     /**
      * The method intended to allow user to locate an input file
      * from the whole file system via open a pop-up dialog/window.
-     * However, due to the security setting on Mac, it cannot work properly.
+     * However, due to the security setting on macOS, it cannot work properly.
      */
     @SuppressWarnings("unused")
-	private void openFileDialog() {
+    private void openFileDialog() {
         FileChooser fileChooser = new FileChooser();
         fileChooser.setTitle("Open File");
         fileChooser.showOpenDialog(stage);
