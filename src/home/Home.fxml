@@ -106,7 +106,7 @@
                                 </TableView>
                             </HBox>
                         </Tab>
-                        <Tab fx:id="visualTab" text="Visualised Network">
+                        <Tab text="Visualised Network">
                             <ScrollPane>
                                 <Canvas fx:id="canvas" height="800.0" width="1200.0" />
                             </ScrollPane>

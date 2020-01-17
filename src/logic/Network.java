@@ -11,7 +11,7 @@ import java.util.stream.Collectors;
 
 /**
  * @author Hanyi.Mo
- * <p>
+ * 
  * Network.java
  */
 
@@ -140,6 +140,19 @@ public class Network {
         });
         return sj.toString();
     }
+    
+    /**
+     * To get degree distribution of the network
+     *
+     * @return
+     */
+    public Map<Integer, Integer> getDegreeDistribution() {
+        Map<Integer, Integer> degreeOfNodes = new HashMap<Integer, Integer>();
+        List<Integer> allDegrees = degreeReverseSorter();
+        allDegrees.forEach(degree -> degreeOfNodes.put(degree, 0));
+        fullDistribution.forEach((key, val) -> degreeOfNodes.put(val, degreeOfNodes.get(val) + 1));
+        return degreeOfNodes;
+    }
 
     /**
      * To save degree distribution to an output file
@@ -159,19 +172,6 @@ public class Network {
         } catch (IOException e) {
             System.err.println(e.getMessage());
         }
-    }
-
-    /**
-     * To get degree distribution of the network
-     *
-     * @return
-     */
-    public Map<Integer, Integer> getDegreeDistribution() {
-        Map<Integer, Integer> degreeOfNodes = new HashMap<Integer, Integer>();
-        List<Integer> allDegrees = degreeReverseSorter();
-        allDegrees.forEach(degree -> degreeOfNodes.put(degree, 0));
-        fullDistribution.forEach((key, val) -> degreeOfNodes.put(val, degreeOfNodes.get(val) + 1));
-        return degreeOfNodes;
     }
 
     /**
