@@ -17,7 +17,6 @@ import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.paint.Color;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
-import javafx.util.Pair;
 import logic.Network;
 
 import java.io.IOException;
@@ -66,16 +65,12 @@ public class HomeController implements Initializable {
      */
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
-        gc = canvas.getGraphicsContext2D();
-
-        filepath.setText("PPInetwork.txt");
-        setSummary();
-        infoArea.setText("Information Area:\n");
+        setInitialVariables();
         infoArea.textProperty().addListener((ChangeListener<Object>) (observable, oldValue, newValue) -> {
-            infoArea.setScrollTop(Double.MAX_VALUE); //this will scroll to the bottom
+            infoArea.setScrollTop(Double.MAX_VALUE); // this will scroll to the bottom
         });
         upload.setOnAction(actionEvent -> {
-            // openFileDialog(); // Cannot work on macOS 10.15.1
+//             openFileDialog(); // Cannot work on macOS 10.15.1
             openFile();
         });
         nodeSearch.setOnAction(actionEvent -> {
@@ -95,6 +90,14 @@ public class HomeController implements Initializable {
 
     public void setStage(Stage stage) {
         this.stage = stage;
+    }
+
+    private void setInitialVariables() {
+        gc = canvas.getGraphicsContext2D();
+        filepath.setText("PPInetwork.txt");
+        output.setText("output.txt");
+        setSummary();
+        infoArea.setText("Information Area:\n");
     }
 
     /**
@@ -124,21 +127,46 @@ public class HomeController implements Initializable {
     }
 
     /**
+     * To clear all fields if uploading fails
+     */
+    private void clearAllFields() {
+        // internal fields
+        averageDegree = 0.0;
+        numOfNodes = 0;
+        numOfInteractions = 0;
+        hubStr = "";
+        maxDegree = 0;
+        numOfEdges = 0;
+        theNode = "";
+
+        // GUI part
+        gc.clearRect(0, 0, canvas.getWidth(), canvas.getHeight());
+        lineChart.getData().clear();
+        table.getItems().clear();
+    }
+
+    /**
      * To create a network from the input filename
      */
     private void openFile() {
         network = new Network();
+        String infoTxt = "";
         try {
             network.createNetworkFromFile(filepath.getText());
+            numOfEdges = 0;
+            theNode = "";
             updateSummary();
-            setSummary();
             updateLineChart();
             setTableView();
             drawCanvas();
-            infoArea.appendText("File " + filepath.getText() + " uploaded successfully!\n");
+            infoTxt = String.format("File %s uploaded successfully!\n", filepath.getText());
         } catch (IOException e) {
-            infoArea.appendText("Cannot find file: " + e.getMessage()
-                    + "\nPlease input valid filename!\n");
+            clearAllFields();
+            network = null;
+            infoTxt = e.getMessage();
+        } finally {
+            setSummary();
+            infoArea.appendText(infoTxt);
         }
     }
 
@@ -158,7 +186,7 @@ public class HomeController implements Initializable {
         int degree = network.degreeOfNode(theNode);
         if (degree == 0) {
             numOfEdges = 0;
-            return "Cannot find edges for the Node: " + theNode + "\n";
+            return String.format("Cannot find edges for the Node: %s\n", theNode);
         }
         numOfEdges = degree;
         return String.format("Find %d edge(s) for the Node %s\nSummary Updated!\n", numOfEdges, theNode);
@@ -187,6 +215,8 @@ public class HomeController implements Initializable {
             return msg;
         } catch (NullPointerException e) {
             return "Cannot add Null node! Please input both nodes!\n";
+        } catch (IOException e) {
+            return e.getMessage();
         }
     }
 
@@ -213,7 +243,8 @@ public class HomeController implements Initializable {
      * @throws NullPointerException
      */
     private void checkNetworkExistence() throws NullPointerException {
-        if (network == null) throw new NullPointerException("Network has not been initialised!\n");
+        if (network == null)
+            throw new NullPointerException("Network has not been successfully initialised!\n");
     }
 
     /**
@@ -239,6 +270,9 @@ public class HomeController implements Initializable {
         lineChart.getData().add(series);
     }
 
+    /**
+     * To setup content in the degree distribution table
+     */
     private void setTableView() {
         List<TableHelper> list = new ArrayList<>();
         network.getDegreeDistribution().forEach((k, v) -> {
@@ -251,26 +285,56 @@ public class HomeController implements Initializable {
         table.setItems(data);
     }
 
+    /**
+     * To plot the visualised network
+     * I won't explain these codes :(
+     */
     private void drawCanvas() {
-        gc.clearRect(0, 0, canvas.getWidth(), canvas.getHeight());
+        gc.clearRect(0, 0, canvas.getWidth(), canvas.getHeight()); // clear all content in the major plotting area
         List<String[]> names = network.getAllEdges();
+        int minDegree = network.getMinDegree();
+        int maxDegree = network.getMaxDegree();
         Map<String, CanvasHelper> nodeCoordinates = new HashMap<>();
         names.forEach(arr -> {
             if (!nodeCoordinates.containsKey(arr[0])) {
-                nodeCoordinates.put(arr[0], new CanvasHelper(arr[0]));
+                nodeCoordinates.put(arr[0], getPlottingScope(arr[0], minDegree, maxDegree));
             }
             if (!nodeCoordinates.containsKey(arr[1])) {
-                nodeCoordinates.put(arr[1], new CanvasHelper(arr[1]));
+                nodeCoordinates.put(arr[1], getPlottingScope(arr[1], minDegree, maxDegree));
             }
             CanvasHelper c1 = nodeCoordinates.get(arr[0]);
             CanvasHelper c2 = nodeCoordinates.get(arr[1]);
-            gc.strokeLine(c1.xAxis + 7.5, c1.yAxis + 7.5, c2.xAxis + 7.5, c2.yAxis + 7.5);
+
+            if (arr[0].equals(arr[1])) {
+                // for self-interaction
+                gc.setStroke(Color.RED);
+                gc.strokeOval(c1.xAxis + 3.75, c1.yAxis + 3.75, 30, 30);
+            } else {
+                // for non-self-interaction
+                gc.setStroke(Color.GRAY);
+                gc.strokeLine(c1.xAxis + 7.5, c1.yAxis + 7.5, c2.xAxis + 7.5, c2.yAxis + 7.5);
+            }
         });
-        gc.setFill(Color.BLUE);
+
+        gc.setStroke(Color.BLACK);
         nodeCoordinates.values().forEach(c -> {
+            if (network.degreeOfNode(c.name) == maxDegree) gc.setFill(Color.RED);
+            else gc.setFill(Color.BLUE);
             gc.fillOval(c.xAxis, c.yAxis, 15, 15);
             gc.strokeText(c.name, c.xAxis, c.yAxis);
         });
+    }
+
+    /**
+     * To define the scope of the node which should be plotted in canvas
+     *
+     * @param nodeName
+     * @param minDegree
+     * @return
+     */
+    private CanvasHelper getPlottingScope(String nodeName, int minDegree, int maxDegree) {
+        int degree = network.degreeOfNode(nodeName);
+        return new CanvasHelper(nodeName, degree, minDegree, maxDegree);
     }
 
     /**

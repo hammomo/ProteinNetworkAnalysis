@@ -7,7 +7,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
-import java.util.stream.Collectors;
 
 /**
  * @author Hanyi.Mo
@@ -18,11 +17,12 @@ import java.util.stream.Collectors;
 public class Network {
     private Set<Node> nodes;
     private Set<Edge> edges;
-    private Map<Node, Integer> fullDistribution = new HashMap<Node, Integer>();
+    private Map<Node, Integer> fullDistribution;
 
     public Network() {
-        this.nodes = new HashSet<Node>();
-        this.edges = new HashSet<Edge>();
+        this.nodes = new HashSet<>();
+        this.edges = new HashSet<>();
+        this.fullDistribution = new HashMap<>();
     }
 
     /**
@@ -37,6 +37,9 @@ public class Network {
             String line;
             while ((line = reader.readLine()) != null) {
                 String[] twoNodes = line.split("\t");
+                if (twoNodes.length != 2) {
+                    throw new InvalidPropertiesFormatException(String.format("The file: %s is not in the right tab-delimited format!\nPlease input the correctly formatted file!\n", filename));
+                }
                 for (String str : twoNodes) {
                     nodes.add(new Node(str));
                 }
@@ -45,8 +48,10 @@ public class Network {
                 edges.add(tmp);
             }
             reader.close();
-        } catch (IOException e) {
+        } catch (InvalidPropertiesFormatException e) {
             throw e;
+        } catch (IOException e) {
+            throw new IOException(String.format("Cannot find file: %s!\nPlease input valid filename!\n", filename));
         }
     }
 
@@ -58,14 +63,14 @@ public class Network {
      * @return
      * @throws NullPointerException
      */
-    public String addInteraction(String name1, String name2) throws NullPointerException {
+    public String addInteraction(String name1, String name2) throws NullPointerException, IOException {
         if (name1 == null || name2 == null || name1.equals("") || name2.equals(""))
             throw new NullPointerException();
         Node node1 = new Node(name1);
         Node node2 = new Node(name2);
         Edge edge = new Edge(node1, node2);
         if (edges.contains(edge)) {
-            return String.format("Interaction between %s and %s already exists!\n", node1.getName(), node2.getName());
+            throw new IOException(String.format("Interaction between %s and %s already exists!\n", node1.getName(), node2.getName()));
         }
         addDegreesToMap(edge, new Node[]{node1, node2});
         edges.add(edge);
@@ -126,6 +131,16 @@ public class Network {
     }
 
     /**
+     * To get min degree for the position of the node in canvas
+     *
+     * @return
+     */
+    public int getMinDegree() {
+        List<Integer> reversedDegrees = degreeReverseSorter();
+        return reversedDegrees.get(reversedDegrees.size() - 1);
+    }
+
+    /**
      * To find the hubs which contain the highest degree
      * return a formatted string to be better handled by UI
      *
@@ -175,15 +190,13 @@ public class Network {
     }
 
     /**
-     * To get all possible degrees of the network and return a list in a descending
-     * order
+     * To get all possible degrees of the network and return a list in a descending order
      *
      * @return
      */
     public List<Integer> degreeReverseSorter() {
-        List<Integer> allDegrees = fullDistribution.values().stream().collect(Collectors.toSet()).stream()
-                .collect(Collectors.toList());
-        Collections.sort(allDegrees, Collections.reverseOrder());
+        List<Integer> allDegrees = new ArrayList<>(new HashSet<>(fullDistribution.values()));
+        allDegrees.sort(Collections.reverseOrder());
         return allDegrees;
     }
 
@@ -208,7 +221,6 @@ public class Network {
     /**
      * Expose all edges (actually, the names of nodes connected by edges)
      * to the front-end to draw the visualised network
-     * Hate Carlos and Paul, their brilliant ideas make others' projects overshadowed!!! :(
      *
      * @return
      */

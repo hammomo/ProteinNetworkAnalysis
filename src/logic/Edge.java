@@ -35,14 +35,4 @@ public class Edge {
         hash = 31*hash + nodes[0].hashCode() + nodes[1].hashCode();
         return hash;
     }
-
-    /**
-     * To check if the edge contains the node or not
-     * @param node
-     * @return
-     */
-    public boolean contains(Node node) {
-        for (Node i: nodes) if (i.equals(node)) return true;
-        return false;
-    }
 }

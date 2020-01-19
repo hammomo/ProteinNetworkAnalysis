@@ -54,5 +54,5 @@
 
 5. Finally, run the project. The Input file “PPInetwork.txt” is under the root folder, and another "PPInetwork_copy.txt" is a modified version, deleting some connections, to view the differences.
 
-***Hits:*** The following extension (*e(fx)clipse 3.6.0*) could be helpful to have a better view of .fxml and .css files.
+***Hints:*** The following extension (*e(fx)clipse 3.6.0*) could be helpful to have a better view of .fxml and .css files.
 ![e(fx)clipse](./pics/efxclipse.png)

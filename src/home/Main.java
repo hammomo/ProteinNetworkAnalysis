@@ -23,7 +23,6 @@ public class Main extends Application {
         HomeController controller = loader.getController();
         controller.setStage(primaryStage);
         primaryStage.setTitle("Network Analysis");
-//        Scene scene = new Scene(root, 750, 500);
         Scene scene = new Scene(root, 1000, 700);
         scene.getStylesheets().add(Main.class.getResource("stylesheet.css").toExternalForm());
         primaryStage.setScene(scene);
