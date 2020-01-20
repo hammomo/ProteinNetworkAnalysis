@@ -1,7 +1,7 @@
 
 # Network Analysis
 
-## Instructions for intallation using *Java SE 13.0.1*, *JavaFX 13.0.1* and *Eclipse*
+## Instructions for installation using *Java SE 13.0.1*, *JavaFX 13.0.1* and *Eclipse*
 
 For other development environment, please modify this tutorial accordingly.
 
